@@ -12,7 +12,7 @@ Extension for KDE’s window manager adding keyboard shortcuts to move windows d
 
 The advantages over KDE's built-in window movers are:
 - For some fingers, the vim-key bindings will be more memorable.
-- For moving a off-screen or over-sized window on screen, the same key-bindins work for you.
+- For moving an off-screen or over-sized window on screen, the same key-bindings work for you.
 
 [TBD: view in KDE Store](https://store.kde.org/p/xxxxxxx)
 
