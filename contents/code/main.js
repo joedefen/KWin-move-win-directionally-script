@@ -4,7 +4,7 @@ KWin Script Move Win Directionally
 GNU General Public License v3.0
 */
 
-const DB = false;
+const DB = true;
 if (DB) print("initializing Move Win Directionally");
 
 function calc_overlap(geo1, geo2) {
@@ -97,24 +97,24 @@ if (DB) {
         print(i, JSON.stringify(geo), "screen_to_the", "up", screen_to_the("up", i));
         print(i, JSON.stringify(geo), "screen_to_the", "down", screen_to_the("down", i));
     }
-    client_screen = which_screen(client.geometry);
+    const client_screen = which_screen(client.geometry);
     print("client_screen:", client_screen);
 }
 
 function move_win(direction) {
     if (DB) print("move_win(", direction, ")");
-    var client = workspace.activeClient;
+    const client = workspace.activeClient;
     if (client == null || !client.normalWindow) return;
-    new_screen = screen_to_the(direction, workspace.activeScreen);
-    if (DB) print('new_screen:', new_screen, "old_screen:", workspace.activeScreen);
+    const old_screen = which_screen(client.geometry);
+    const new_screen = screen_to_the(direction, old_screen)
+    if (DB) print('new_screen:', new_screen, "old_screen:", old_screen)
     workspace.sendClientToScreen(client, new_screen);
     // clip and move client into bounds of screen dimensions
     if (DB) print("client.moveable:", client.moveable, "ogeo:",
         JSON.stringify(client.geometry));
     if (!client.moveable) return;
-    client_screen = which_screen(client.geometry);
-    area = workspace.clientArea(KWin.MaximizeArea, client_screen, workspace.currentDesktop);
-    if (DB) print("screen:", JSON.stringify(area));
+    area = workspace.clientArea(KWin.MaximizeArea, new_screen, workspace.currentDesktop);
+    if (DB) print("new_screen_area:", JSON.stringify(area));
     // window width/height maximally screen width/height
     const width = Math.min(client.width, area.width);
     const height = Math.min(client.height, area.height);
@@ -123,6 +123,8 @@ function move_win(direction) {
     const y = client.geometry.y = Math.max(area.y, Math.min(area.y + area.height - client.height, client.y));
     client.geometry = {x: x, y: y, width: width, height: height};
     if (DB) print("ngeo:", JSON.stringify(client.geometry));
+    workspace.activateClient(client); // NOTE: causes the script to bail
+    if (DB) print("activated:", JSON.stringify(client)); // NOTE: so this does not run
 }
     
 function move_win_right() { move_win("right"); }
