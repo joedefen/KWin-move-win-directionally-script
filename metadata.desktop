@@ -1,0 +1,23 @@
+# KWin Script Step Resize
+# (C) 2021 Joe Defen <joe@jdef.ga>
+# GNU General Public License v3.0
+
+[Desktop Entry]
+Name=Move Directionally
+Comment=Move the active window directionally (up/down/right/left)
+Icon=preferences-system-windows
+
+X-KDE-PluginInfo-Name=movewindirectionally
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Author=Joe Defen
+X-KDE-PluginInfo-Email=joedef@jdef.ga
+X-KDE-PluginInfo-License=GPL v3.0
+
+Type=Service
+X-KDE-ServiceTypes=KWin/Script,KCModule
+X-Plasma-API=javascript
+X-Plasma-MainScript=code/main.js
+
+X-KDE-Library=kwin/effects/configs/kcm_kwin4_genericscripted
+X-KDE-PluginKeyword=movewindirectionally
+X-KDE-ParentComponents=movewindirectionally
