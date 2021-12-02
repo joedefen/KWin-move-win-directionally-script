@@ -99,6 +99,9 @@ if (DB) {
     }
     const client_screen = which_screen(client.geometry);
     print("client_screen:", client_screen);
+    callDBus("org.kde.kglobalaccel", "/component/kwin",
+                         "org.kde.kglobalaccel.Component", "invokeShortcut", "Window Raise",
+                         function () { print("test Window Raise OK!"); } );
 }
 
 function move_win(direction) {
@@ -108,10 +111,16 @@ function move_win(direction) {
     const old_screen = which_screen(client.geometry);
     const new_screen = screen_to_the(direction, old_screen)
     if (DB) print('new_screen:', new_screen, "old_screen:", old_screen)
-    workspace.sendClientToScreen(client, new_screen);
-    // clip and move client into bounds of screen dimensions
+    if (old_screen != new_screen) {
+        if (!client.moveableAcrossScreens) {
+            if (DB) print("not allowed to move to new screen");
+            return;
+        }
+        workspace.sendClientToScreen(client, new_screen);
+    }
     if (DB) print("client.moveable:", client.moveable, "ogeo:",
         JSON.stringify(client.geometry));
+    if (DB && !client.moveable) print("returning (not moveable");
     if (!client.moveable) return;
     area = workspace.clientArea(KWin.MaximizeArea, new_screen, workspace.currentDesktop);
     if (DB) print("new_screen_area:", JSON.stringify(area));
@@ -123,8 +132,13 @@ function move_win(direction) {
     const y = client.geometry.y = Math.max(area.y, Math.min(area.y + area.height - client.height, client.y));
     client.geometry = {x: x, y: y, width: width, height: height};
     if (DB) print("ngeo:", JSON.stringify(client.geometry));
-    workspace.activateClient(client); // NOTE: causes the script to bail
-    if (DB) print("activated:", JSON.stringify(client)); // NOTE: so this does not run
+    workspace.activateClient = client;
+    // Equivant to: qdbus org.kde.kglobalaccel /component/kwin
+    //                  org.kde.kglobalaccel.Component.invokeShortcut "Window Raise"
+    callDBus("org.kde.kglobalaccel", "/component/kwin",
+                         "org.kde.kglobalaccel.Component", "invokeShortcut", "Window Raise",
+                         function () { if (DB) print("Window Raise OK!"); } );
+    if (DB) print("move_win DONE:", JSON.stringify(client));
 }
     
 function move_win_right() { move_win("right"); }
