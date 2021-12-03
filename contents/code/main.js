@@ -2,9 +2,27 @@
 KWin Script Move Win Directionally
 (C) 2021 Joe Defen <joe@jdef.ga>
 GNU General Public License v3.0
+
+Development instructions (at least while the Kwin Console is broken):
+0) set "DB" to true
+1) "trash" the old version of the script in KWin Scripts settings
+2) Run from home directory a script containing:
+  set -x -e
+  plasmapkg2 --type kwinscript -i KWin-move-win-directionally-script
+  kwriteconfig5 --file kwinrc --group Plugins --key movewindirectionallyEnabled true
+  qdbus org.kde.KWin /KWin reconfigure
+  pkill kwin_x11; kwin_x11 &
+  
+  
+TODO: would like the mouse to move within the moved window, no good way found.
+  - github.com/wsdfhjxc/kwin-scripts/blob/master/task-manager-do-it-yourself-bar/contents/code/main.js
+    runs xdotool from within a script but requires "Do It Yourself Bar" which does
+    not easily install.
+  - the KDE operation, Move Mouse to Focus, *should* do the trick, but does not work.
+
 */
 
-const DB = true;
+const DB = false;
 if (DB) print("initializing Move Win Directionally");
 
 function calc_overlap(geo1, geo2) {
@@ -46,10 +64,9 @@ function screen_to_the(direction, current_screen) {
     } else if (direction == "up") {
         shifted_geo.y -= shifted_geo.height;
     }
-    var 
-    most_overlap = 0;
+    var most_overlap = 0;
     var most_screen = current_screen;
-    for (var i = 0; i < nscreens; i++) {
+    for (var i = 0; i < workspace.numScreens; i++) {
         var geo = workspace.clientArea(KWin.MaximizeArea, i, workspace.currentDesktop);
         var overlap = calc_overlap(shifted_geo, geo);
         if (overlap > most_overlap) {
@@ -67,7 +84,7 @@ function which_screen(client_geo) {
     var most_screen = 0;
     var closest_distance = 2000*1000;
     var closest_screen = 0;
-    for (var i = 0; i < nscreens; i++) {
+    for (var i = 0; i < workspace.numScreens; i++) {
         var geo = workspace.clientArea(KWin.MaximizeArea, i, workspace.currentDesktop);
         var overlap = calc_overlap(client_geo, geo);
         if (overlap > most_overlap) {
@@ -87,9 +104,11 @@ function which_screen(client_geo) {
 }
 
 if (DB) {
+    // Called when the script is loaded to demonstrate key primitive operations
+    // are in working order (if DB is set).
     var client = workspace.activeClient;
     var nscreens = workspace.numScreens;
-    print("nscreens", nscreens)
+    print("nscreens", nscreens);
     for (var i = 0; i < nscreens; i++) {
         var geo = workspace.clientArea(KWin.MaximizeArea, i, workspace.currentDesktop);
         print(i, JSON.stringify(geo), "screen_to_the", "right", screen_to_the("right", i));
@@ -102,6 +121,9 @@ if (DB) {
     callDBus("org.kde.kglobalaccel", "/component/kwin",
                          "org.kde.kglobalaccel.Component", "invokeShortcut", "Window Raise",
                          function () { print("test Window Raise OK!"); } );
+    /* callDBus("org.kde.kglobalaccel", "/component/kwin",
+                "org.kde.kglobalaccel.Component", "invokeShortcut", "MoveMouseToFocus",
+                function () { if (DB) print("test Window Focus OK!"); } ); */
 }
 
 function move_win(direction) {
@@ -110,7 +132,7 @@ function move_win(direction) {
     if (client == null || !client.normalWindow) return;
     const old_screen = which_screen(client.geometry);
     const new_screen = screen_to_the(direction, old_screen)
-    if (DB) print('new_screen:', new_screen, "old_screen:", old_screen)
+    if (DB) print('new_screen:', new_screen, "old_screen:", old_screen);
     if (old_screen != new_screen) {
         if (!client.moveableAcrossScreens) {
             if (DB) print("not allowed to move to new screen");
@@ -122,22 +144,28 @@ function move_win(direction) {
         JSON.stringify(client.geometry));
     if (DB && !client.moveable) print("returning (not moveable");
     if (!client.moveable) return;
-    area = workspace.clientArea(KWin.MaximizeArea, new_screen, workspace.currentDesktop);
+    const area = workspace.clientArea(KWin.MaximizeArea, new_screen, workspace.currentDesktop);
     if (DB) print("new_screen_area:", JSON.stringify(area));
     // window width/height maximally screen width/height
     const width = Math.min(client.width, area.width);
     const height = Math.min(client.height, area.height);
     // left/top window edge between left and right/top and bottom screen edges
-    const x = client.geometry.x = Math.max(area.x, Math.min(area.x + area.width - client.width, client.x));
-    const y = client.geometry.y = Math.max(area.y, Math.min(area.y + area.height - client.height, client.y));
+    const x = client.geometry.x = Math.max(area.x,
+                Math.min(area.x + area.width - client.width, client.x));
+    const y = client.geometry.y = Math.max(area.y,
+                Math.min( area.y + area.height - client.height, client.y));
     client.geometry = {x: x, y: y, width: width, height: height};
     if (DB) print("ngeo:", JSON.stringify(client.geometry));
     workspace.activateClient = client;
     // Equivant to: qdbus org.kde.kglobalaccel /component/kwin
     //                  org.kde.kglobalaccel.Component.invokeShortcut "Window Raise"
     callDBus("org.kde.kglobalaccel", "/component/kwin",
-                         "org.kde.kglobalaccel.Component", "invokeShortcut", "Window Raise",
-                         function () { if (DB) print("Window Raise OK!"); } );
+                "org.kde.kglobalaccel.Component", "invokeShortcut", "Window Raise",
+                function () { if (DB) print("Window Raise OK!"); } );
+    // Evidently, MoveMouseToFocus is broken
+    /* callDBus("org.kde.kglobalaccel", "/component/kwin",
+                "org.kde.kglobalaccel.Component", "invokeShortcut", "MoveMouseToFocus",
+                function () { if (DB) print("Window Focus OK!"); } ); */
     if (DB) print("move_win DONE:", JSON.stringify(client));
 }
     
