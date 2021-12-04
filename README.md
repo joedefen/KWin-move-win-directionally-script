@@ -20,7 +20,10 @@ NOTE: just as for the built-in movers, the mouse cursor is left behind. For this
 the design intent was to move the mouse into the moved window,
 but no practical way to do that from a KWin script has been found.
 
-[TBD: view in KDE Store](https://store.kde.org/p/xxxxxxx)
+[TBD: view in KDE Store](https://store.kde.org/p/xxxxxxx).
+* There are no current plans to add this script to the KDE store since I do not use this script on a regular basis.
+  because of the current unrectifiable mouse cursor left behind deficiency.
+* Instead, I use [MoveWindow](https://github.com/joedefen/MoveWindow) which has less annoying caveats for my personal use.
 
 ## Installation
 
